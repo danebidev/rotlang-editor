@@ -15,7 +15,7 @@ const CodeEditor = () => {
         setError("");
 
         try {
-            const response = await fetch("/api/compile", {
+            const response = await fetch("http://localhost:4000/api/compile", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -59,14 +59,18 @@ const CodeEditor = () => {
 
             {error && (
                 <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription>
+                        <pre className="whitespace-pre-wrap font-mono text-sm">
+                            {error}
+                        </pre>
+                    </AlertDescription>
                 </Alert>
             )}
 
             {output && (
                 <Card classname="p-4">
                     <h3 className="font-semibold mb-2">Output:</h3>
-                    <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto">
+                    <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto whitespace-pre-wrap font-mono text-sm">
                         {output}
                     </pre>
                 </Card>

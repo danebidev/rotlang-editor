@@ -4,11 +4,24 @@ import tempfile
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import uuid
+import re
 
 app = Flask(__name__)
 CORS(app)
 
 MAX_EXECUTION_TIME=3
+
+def strip_ansi_codes(text):
+    # black magic regex from stack overflow
+    ansi = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])") 
+    return ansi.sub("", text)
+
+def process_output(text):
+    text = strip_ansi_codes(text)
+    text = text.replace("\x00", "")
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+
+    return text
 
 def create_code_file(code):
     name = f"{uuid.uuid4()}.rl"
@@ -42,7 +55,8 @@ def run_code():
 
             if compiler_proc.returncode != 0:
                 return jsonify({
-                    "error": f"Compilation error: {compiler_proc.stdout}"
+                    # TODO: modify the compiler to write errors to stderr
+                    "error": f"Compilation error: {process_output(compiler_proc.stdout)}"
                 }), 400
 
             run_proc = subprocess.run(
@@ -58,7 +72,7 @@ def run_code():
                 # just doesn't support sterr, but whatever
                 "proc_error": run_proc.stderr, 
                 "proc_code": run_proc.returncode,
-                "comp_output": compiler_proc.stdout,
+                "comp_output": process_output(compiler_proc.stdout),
             })
         
         except subprocess.TimeoutExpired:
@@ -69,13 +83,13 @@ def run_code():
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
-        # finally:
-        #     try:
-        #         os.remove(source_file)
-        #         if os.path.exists(binary_file):
-        #             os.remove(binary_file)
-        #     except:
-        #         pass
+        finally:
+            try:
+                os.remove(source_file)
+                if os.path.exists(binary_file):
+                    os.remove(binary_file)
+            except:
+                pass
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
