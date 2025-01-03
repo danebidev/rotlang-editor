@@ -2,9 +2,11 @@ import os
 import subprocess
 import tempfile
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 import uuid
 
 app = Flask(__name__)
+CORS(app)
 
 MAX_EXECUTION_TIME=3
 
@@ -12,7 +14,7 @@ def create_code_file(code):
     name = f"{uuid.uuid4()}.rl"
     path = os.path.join(tempfile.gettempdir(), name)
     
-    with open(name, "w") as f:
+    with open(path, "w") as f:
         f.write(code)
 
     return path
@@ -27,6 +29,7 @@ def run_code():
             return jsonify({"error": "No code provided"}), 400
 
         source_file = create_code_file(code)
+        print(source_file)
         binary_file = os.path.join(os.path.dirname(source_file), "a.out")
 
         try:
@@ -39,8 +42,8 @@ def run_code():
 
             if compiler_proc.returncode != 0:
                 return jsonify({
-                    "comp_error": f"Compilation error: {compiler_proc.stderr}"
-                })
+                    "error": f"Compilation error: {compiler_proc.stdout}"
+                }), 400
 
             run_proc = subprocess.run(
                 [binary_file],
@@ -65,13 +68,13 @@ def run_code():
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
-        finally:
-            try:
-                os.remove(source_file)
-                if os.path.exists(binary_file):
-                    os.remove(binary_file)
-            except:
-                pass
+        # finally:
+        #     try:
+        #         os.remove(source_file)
+        #         if os.path.exists(binary_file):
+        #             os.remove(binary_file)
+        #     except:
+        #         pass
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
