@@ -4,15 +4,24 @@ import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const CodeEditor = () => {
-    const [code, setCode] = useState("");
-    const [output, setOutput] = useState("");
-    const [error, setError] = useState("");
+    const default_code = "deadass int frfr main() be like {\n   yeet 0;\n}"
+
+    const [code, setCode] = useState(default_code);
+    const [programOut, setProgramOut] = useState("");
+    const [programErr, setProgramErr] = useState("");
+    const [compOut, setCompOut] = useState("");
+    const [compError, setCompError] = useState("");
+    const [exitCode, setExitCode] = useState("");
     const [isLoading, setIsLoading] = useState(false)
+    const [view, setView] = useState(false)
 
     const handleSubmit = async() => {
         setIsLoading(true);
-        setOutput("");
-        setError("");
+        setProgramOut("");
+        setProgramErr("");
+        setCompOut("");
+        setCompError("");
+        setView(true)
 
         try {
             const response = await fetch("http://localhost:4000/api/compile", {
@@ -25,13 +34,21 @@ const CodeEditor = () => {
 
             const data = await response.json();
 
+            setCompOut(data.comp_output);
+
             if(!response.ok) {
                 throw new Error(data.error || "Compilation failed");
             }
 
-            setOutput(data.output);
+            setProgramOut(data.proc_output);
+            setExitCode(data.proc_code);
+
+            if(data.proc_error) {
+                setProgramErr(data.proc_error);
+            }
+
         } catch(err) {
-            setError(err.message);
+            setCompError(err.message);
         } finally {
             setIsLoading(false);
         }
@@ -57,21 +74,39 @@ const CodeEditor = () => {
                 </div>
             </Card>
 
-            {error && (
+            {view && compError && (
                 <Alert variant="destructive">
                     <AlertDescription>
                         <pre className="whitespace-pre-wrap font-mono text-sm">
-                            {error}
+                            {compError}
                         </pre>
                     </AlertDescription>
                 </Alert>
             )}
 
-            {output && (
-                <Card classname="p-4">
-                    <h3 className="font-semibold mb-2">Output:</h3>
+            {view && !compError && (
+                <Card className="p-4">
+                    <h3 className="font-semibold mb-2">Program stdout (exit code {exitCode}):</h3>
                     <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto whitespace-pre-wrap font-mono text-sm">
-                        {output}
+                        {programOut}
+                    </pre>
+                </Card>
+            )}
+
+            {view && programErr && !compError && (
+                <Card className="p-4">
+                    <h3 className="font-semibold mb-2">Program stderr:</h3>
+                    <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto whitespace-pre-wrap font-mono text-sm">
+                        {programErr}
+                    </pre>
+                </Card>
+            )}
+
+            {view && (
+                <Card className="p-4">
+                    <h3 className="font-semibold mb-2">Compilator output:</h3>
+                    <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto whitespace-pre-wrap font-mono text-sm">
+                        {compOut}
                     </pre>
                 </Card>
             )}
