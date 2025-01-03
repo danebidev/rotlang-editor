@@ -19,44 +19,59 @@ def create_code_file(code):
 
 @app.route("/api/compile", methods=["POST"])
 def run_code():
-    data = request.get_json()
-    code = data["code"]
-
-    source_file = create_code_file(code)
-    binary_file = os.path.join(os.path.dirname(source_file), "a.out")
-
     try:
-        compiler_proc= subprocess.run(
-            [os.path.expanduser("~/bin/rotlang"), source_file],
-            capture_output = True,
-            text = True,
-            timeout=MAX_EXECUTION_TIME
-        )
+        data = request.get_json()
+        code = data["code"]
 
-        if compiler_proc.returncode != 0:
+        if not code:
+            return jsonify({"error": "No code provided"}), 400
+
+        source_file = create_code_file(code)
+        binary_file = os.path.join(os.path.dirname(source_file), "a.out")
+
+        try:
+            compiler_proc= subprocess.run(
+                [os.path.expanduser("~/bin/rotlang"), source_file],
+                capture_output = True,
+                text = True,
+                timeout=MAX_EXECUTION_TIME
+            )
+
+            if compiler_proc.returncode != 0:
+                return jsonify({
+                    "comp_error": f"Compilation error: {compiler_proc.stderr}"
+                })
+
+            run_proc = subprocess.run(
+                [binary_file],
+                capture_output=True,
+                text= True,
+                timeout=MAX_EXECUTION_TIME
+            )
+
             return jsonify({
-                "comp_error": f"Compilation error: {compiler_proc.stderr}"
+                "proc_output": run_proc.stdout,
+                # This is probably impossible, since my compiler 
+                # just doesn't support sterr, but whatever
+                "proc_error": run_proc.stderr, 
+                "comp_output": compiler_proc.stdout,
             })
+        
+        except subprocess.TimeoutExpired:
+            return jsonify({
+                "error": f"Execution timed out (infinite loop?)"
+            }), 408
 
-        run_proc = subprocess.run(
-            [binary_file],
-            capture_output=True,
-            text= True,
-            timeout=MAX_EXECUTION_TIME
-        )
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
-        return jsonify({
-            "proc_output": run_proc.stdout,
-            # This is probably impossible, since my compiler 
-            # just doesn't support sterr, but whatever
-            "proc_error": run_proc.stderr, 
-            "comp_output": compiler_proc.stdout,
-        })
-    
-    except subprocess.TimeoutExpired:
-        return jsonify({
-            "error": f"Execution timed out (infinite loop?)"
-        }), 408
+        finally:
+            try:
+                os.remove(source_file)
+                if os.path.exists(binary_file):
+                    os.remove(binary_file)
+            except:
+                pass
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
