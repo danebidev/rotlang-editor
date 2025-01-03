@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import CodeMirror from '@uiw/react-codemirror';
+import { cpp } from '@codemirror/lang-cpp';
+import { oneDark } from '@codemirror/theme-one-dark';
 
 const CodeEditor = () => {
-    const default_code = "deadass int frfr main() be like {\n   yeet 0;\n}"
+    const default_code = "deadass int frfr main() be like {\n    yeet 0;\n}"
 
     const [code, setCode] = useState(default_code);
     const [programOut, setProgramOut] = useState("");
@@ -21,7 +24,7 @@ const CodeEditor = () => {
         setProgramErr("");
         setCompOut("");
         setCompError("");
-        setView(true)
+        setView(true);
 
         try {
             const response = await fetch("http://localhost:4000/api/compile", {
@@ -54,16 +57,45 @@ const CodeEditor = () => {
         }
     };
 
+    const onChange = React.useCallback((value) => {
+        setCode(value);
+    }, []);
+
     return (
         <div className="flex h-screen bg-gray-900 text-white">
             <div className="flex-1 p-4 border-r border-gray-700">
                 <div className="h-full flex flex-col">
-                    <textarea
-                        value={code}
-                        onChange={(e) => setCode(e.target.value)}
-                        className="flex-1 p-4 font-mono text-sm bg-gray-800 text-white border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                        placeholder="Enter your code here."
-                    />
+                    <div className="flex-1 overflow-hidden rounded-md">
+                        {/* TODO: Actually make an extension for my language */}
+                        {/* If i can't i'll just get one that seems to be as close as possibe */}
+                        <CodeMirror
+                            value={code}
+                            height="100%"
+                            theme={oneDark}
+                            extensions={[cpp()]}
+                            onChange={onChange}
+                            className="h-full"
+                            basicSetup={{
+                                lineNumbers: true,
+                                highlightActiveLineGutter: true,
+                                highlighSpecialChars: true,
+                                history: true,
+                                foldGutter: true,
+                                drawSelection: true,
+                                dropCursor: true,
+                                allowMultipleSelections: true,
+                                indentOnInput: true,
+                                syntaxHighlighting: true,
+                                brackedMatching: true,
+                                closeBrackets: true,
+                                rectangularSelection: true,
+                                crosshairCursor: true,
+                                highlightActiveLine: true,
+                                highlightSelectionMatches: true,
+                                tabSize: 4
+                            }}
+                        />
+                    </div>
                     <div className="mt-4">
                         <Button
                             onClick={handleSubmit}
