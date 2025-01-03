@@ -6,6 +6,8 @@ import uuid
 
 app = Flask(__name__)
 
+MAX_EXECUTION_TIME=3
+
 def create_code_file(code):
     name = f"{uuid.uuid4()}.rl"
     path = os.path.join(tempfile.gettempdir(), name)
@@ -28,6 +30,7 @@ def run_code():
             [os.path.expanduser("~/bin/rotlang"), source_file],
             capture_output = True,
             text = True,
+            timeout=MAX_EXECUTION_TIME
         )
 
         if compiler_proc.returncode != 0:
@@ -39,6 +42,7 @@ def run_code():
             [binary_file],
             capture_output=True,
             text= True,
+            timeout=MAX_EXECUTION_TIME
         )
 
         return jsonify({
@@ -48,6 +52,12 @@ def run_code():
             "proc_error": run_proc.stderr, 
             "comp_output": compiler_proc.stdout,
         })
+    
+    except subprocess.TimeoutExpired:
+        return jsonify({
+            "error": f"Execution timed out (infinite loop?)"
+        }), 408
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
