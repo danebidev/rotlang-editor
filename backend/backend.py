@@ -57,6 +57,7 @@ def run_code():
                 # This is probably impossible, since my compiler 
                 # just doesn't support sterr, but whatever
                 "proc_error": run_proc.stderr, 
+                "proc_code": run_proc.returncode,
                 "comp_output": compiler_proc.stdout,
             })
         
