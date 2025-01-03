@@ -55,8 +55,8 @@ def run_code():
 
             if compiler_proc.returncode != 0:
                 return jsonify({
-                    # TODO: modify the compiler to write errors to stderr
-                    "error": f"{process_output(compiler_proc.stdout)}"
+                    "error": process_output(compiler_proc.stderr),
+                    "comp_output": process_output(compiler_proc.stdout)
                 }), 400
 
             run_proc = subprocess.run(
