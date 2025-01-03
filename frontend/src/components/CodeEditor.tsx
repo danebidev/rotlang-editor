@@ -55,61 +55,73 @@ const CodeEditor = () => {
     };
 
     return (
-        <div className="w-full max-w-4xl mx-auto p-4 space-y-4">
-            <Card className="p-4">
-                <textarea
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="w-full h64 p-4 font-mono text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your code here."
-                />
-                <div className="mt-4">
-                    <Button
-                      onClick={handleSubmit}
-                      disabled={isLoading}
-                      className="w-full"
-                    >
-                        {isLoading ? "Running..." : "Compile and run"}
-                    </Button>
+        <div className="flex h-screen bg-gray-900 text-white">
+            <div className="flex-1 p-4 border-r border-gray-700">
+                <div className="h-full flex flex-col">
+                    <textarea
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
+                        className="flex-1 p-4 font-mono text-sm bg-gray-800 text-white border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                        placeholder="Enter your code here."
+                    />
+                    <div className="mt-4">
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={isLoading}
+                            className="w-full bg-blue-600 hover:bg-blue-700"
+                        >
+                            {isLoading ? "Running..." : "Compile and run"}
+                        </Button>
+                    </div>
                 </div>
-            </Card>
+            </div>
 
-            {view && compError && (
-                <Alert variant="destructive">
-                    <AlertDescription>
-                        <pre className="whitespace-pre-wrap font-mono text-sm">
-                            {compError}
-                        </pre>
-                    </AlertDescription>
-                </Alert>
-            )}
+            <div className="w-1/2 p-4 bg-gray-900 overflow-y-auto">
+                <div className="space-y-4">
+                    {view && compError && (
+                        <Alert variant="destructive">
+                            <AlertDescription>
+                                <pre className="whitespace-pre-wrap font-mono text-sm">
+                                    {compError}
+                                </pre>
+                            </AlertDescription>
+                        </Alert>
+                    )}
 
-            {view && !compError && (
-                <Card className="p-4">
-                    <h3 className="font-semibold mb-2">Program stdout (exit code {exitCode}):</h3>
-                    <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto whitespace-pre-wrap font-mono text-sm">
-                        {programOut}
-                    </pre>
-                </Card>
-            )}
+                    {view && !compError && (
+                        <Card className="bg-gray-800 border-gray-700">
+                            <div className="p-4">
+                                <h3 className="font-semibold mb-2 text-white">Program stdout (exit code {exitCode})</h3>
+                                <pre className="bg-gray-900 p-4 rounded-md overflow-x-auto whitespace-pre-wrap font-mono text-sm text-white">
+                                    {programOut || "No output"}
+                                </pre>
+                            </div>
+                        </Card>
+                    )}
 
-            {view && programErr && !compError && (
-                <Card className="p-4">
-                    <h3 className="font-semibold mb-2">Program stderr:</h3>
-                    <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto whitespace-pre-wrap font-mono text-sm">
-                        {programErr}
-                    </pre>
-                </Card>
-            )}
+                    {view && programErr && !compError && (
+                        <Card className="bg-gray-800 border-gray-700">
+                            <div className="p-4">
+                                <h3 className="font-semibold mb-2 text-white">Program stderr</h3>
+                                <pre className="bg-gray-900 p-4 rounded-md overflow-x-auto whitespace-pre-wrap font-mono text-sm text-white">
+                                    {programErr}
+                                </pre>
+                            </div>
+                        </Card>
+                    )}
 
-            {view && (
-                <Card className="p-4">
-                    <h3 className="font-semibold mb-2">Compilator output:</h3>
-                    <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto whitespace-pre-wrap font-mono text-sm">
-                        {compOut}
-                    </pre>
-                </Card>
-            )}
+                    {view && (
+                        <Card className="bg-gray-800 border-gray-700">
+                            <div className="p-4">
+                                <h3 className="font-semibold mb-2 text-white">Compiler output</h3>
+                                <pre className="bg-gray-900 p-4 rounded-md overflow-x-auto whitespace-pre-wrap font-mono text-sm text-white">
+                                    {compOut || "No compiler output"}
+                                </pre>
+                            </div>
+                        </Card>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };

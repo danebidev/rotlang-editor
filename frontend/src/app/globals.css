@@ -70,3 +70,9 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: rgb(17, 24, 39); /* bg-gray-900 */
+}
