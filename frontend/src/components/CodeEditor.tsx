@@ -1,28 +1,40 @@
 import React, { useState } from "react";
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const CodeEditor = () => {
     const [code, setCode] = useState("");
     const [output, setOutput] = useState("");
+    const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false)
 
     const handleSubmit = async() => {
         setIsLoading(true);
         setOutput("");
+        setError("");
 
-        const response = await fetch("/api/compile", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({code})
-        });
+        try {
+            const response = await fetch("/api/compile", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({code})
+            });
 
-        const data = await response.json();
+            const data = await response.json();
 
-        setOutput(data.output)
-        setIsLoading(false);
+            if(!response.ok) {
+                throw new Error(data.error || "Compilation failed");
+            }
+
+            setOutput(data.output);
+        } catch(err) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -44,6 +56,12 @@ const CodeEditor = () => {
                     </Button>
                 </div>
             </Card>
+
+            {error && (
+                <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            )}
 
             {output && (
                 <Card classname="p-4">
